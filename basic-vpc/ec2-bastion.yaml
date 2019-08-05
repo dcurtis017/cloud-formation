@@ -1,0 +1,82 @@
+---
+Description: A bastoin host
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  InstanceType:
+    Type: String
+    Default: t2.nano
+    AllowedValues:
+      - t2.micro
+      - t2.small
+      - t2.nano
+    Description: EC2 Instance type
+  KeyName:
+    Type: AWS::EC2::KeyPair::KeyName
+    Default: cf-vpc-kp
+    AllowedValues:
+      - cf-vpc-kp
+    Description: Key Pair Name
+  InstanceName:
+    Type: String
+    Default: Bastion Host
+  Subnet:
+    Type: String
+    Default: tvpc-public-subnet-1
+  VPC:
+    Type: String
+    Default: tvpc
+
+Mappings:
+  AWSInstanceType2Arch:
+    t2.micro:
+      Arch: HVM64
+    t2.nano:
+      Arch: HVM64
+    t2.small:
+      Arch: HVM64
+  AWSRegionArch2AMI:
+    us-east-1:
+      HVM64: ami-0080e4c5bc078760e
+
+Resources:
+  BastionSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: "Bastion Security Group"
+      GroupDescription: "SSH traffic in, all out"
+      VpcId: !ImportValue tvpc
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: 107.13.134.184/32
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          CidrIp: 0.0.0.0/0 
+  BastionSSHFrom:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: "Bastion Allow SSH"
+      GroupDescription: "SSH from Bastion"
+      VpcId: !ImportValue tvpc
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          SourceSecurityGroupId: !Ref BastionSG 
+  BastionHost:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: !Ref InstanceType
+      SecurityGroupIds: 
+        - !Ref BastionSG
+      KeyName: !Ref KeyName
+      ImageId: !FindInMap [ AWSRegionArch2AMI, !Ref 'AWS::Region' , !FindInMap [ AWSInstanceType2Arch, !Ref InstanceType, Arch ] ]
+      Tags:
+        -
+          Key: Name
+          Value: !Ref InstanceName
+      SubnetId: 
+        Fn::ImportValue:
+          !Sub "${Subnet}"

@@ -1,0 +1,39 @@
+---
+Description: A NAT Gateway and routes for our plain vpc
+AWSTemplateFormatVersion: 2010-09-09
+
+Resources:
+  NAT1EIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+  NATGateway1:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId:
+        Fn::GetAtt:
+          - NAT1EIP
+          - AllocationId
+      SubnetId: !ImportValue tvpc-public-subnet-1
+  PrivateSubnet1NATGWRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NATGateway1
+      RouteTableId: !ImportValue tvpc-private-rt1
+
+  NAT2EIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+  NATGateway2:
+    Type: AWS::EC2::NatGateway
+    Properties:
+      AllocationId: !GetAtt NAT2EIP.AllocationId
+      SubnetId: !ImportValue tvpc-public-subnet-2
+  PrivateSubnet2NATGWRoute:
+    Type: AWS::EC2::Route
+    Properties:
+      DestinationCidrBlock: 0.0.0.0/0
+      NatGatewayId: !Ref NATGateway2
+      RouteTableId: !ImportValue tvpc-private-rt2
