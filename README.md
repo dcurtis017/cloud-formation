@@ -20,6 +20,7 @@ https://www.bogotobogo.com/DevOps/AWS/aws-CloudFormation-Autoscaling-Group-ASG-A
 4. application load balancer
 5. add target listener rules for specific cases
 6. ecs
+7. ability to ssh into web server
 
 ___
 # Notes
