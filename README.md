@@ -9,6 +9,7 @@ basic-vpc-bastion
 basic-vpc-nat-gateway
 Fn::GetAtt:
 
+Components to add:
 add user data to webserver instance
 do another one that uses custom amis and launch template
 auto scaling group
