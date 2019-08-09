@@ -48,7 +48,7 @@ Resources:
     Type: AWS::EC2::Instance
     Properties:
       InstanceType: !Ref InstanceType
-      SecurityGroupIds: 
+      SecurityGroupIds:
         - !ImportValue ws-sg
       KeyName: !Ref KeyName
       ImageId: !FindInMap [ AWSRegionArch2AMI, !Ref 'AWS::Region' , !FindInMap [ AWSInstanceType2Arch, !Ref InstanceType, Arch ] ]
@@ -63,6 +63,12 @@ Resources:
         -
           Key: Name
           Value: !Ref InstanceName
-      SubnetId: 
+      SubnetId:
         Fn::ImportValue:
           !Sub "${Subnet}"
+
+Outputs:
+  webServerInstance:
+    Value: !Ref WebServer
+    Export:
+      Name: web-server

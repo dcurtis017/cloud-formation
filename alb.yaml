@@ -1,0 +1,74 @@
+---
+Description: A webserver (LAP)
+AWSTemplateFormatVersion: 2010-09-09
+
+Parameters:
+  ALBName:
+    Type: String
+    Description: Name of your alb
+    Default: Application Load Balancer
+  Subnets:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: Which subnets ALB should be deployed to
+  VPC:
+    Type: AWS::EC2::VPC::Id
+    Description: VPC to deploy ALB to
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup::Id
+    Description: Security group to apply to ALB
+  Target:
+    Type: AWS::EC2::Instance
+    Description: Target instance
+
+Resources:
+  ALB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      IpAddressType: ipv4
+      Scheme: internet-facing
+      SecurityGroups:
+        - !Ref SecurityGroup
+      Subnets: !Ref Subnets
+      Tags:
+        - Key: Name
+          Value: !Ref ALBName
+
+  ALBListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref ALB
+      Port: 80
+      Protocol: HTTP
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref DefaultTargetGroup
+
+  DefaultTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: !Sub ${ALBName}-default
+      VpcId: !Ref VPC
+      Port: 80
+      Protocol: HTTP
+      HealthCheckEnabled: true
+      HealthCheckIntervalSeconds: 60
+      HealthCheckPath: /
+      HealthCheckPort: 80
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 3
+      Targets:
+        - Id: !Ref Target
+
+Outputs:
+  LoadBalancer:
+    Description: A reference to the Application Load Balancer
+    Value: !Ref ALB
+
+  LoadBalancerUrl:
+    Description: The URL of the ALB
+    Value: !GetAtt ALB.DNSName
+
+  Listener:
+    Description: A reference to a port 80 listener
+    Value: !Ref ALBListener
